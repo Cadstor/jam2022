@@ -21,21 +21,30 @@ public class ScriptReader : MonoBehaviour
     public Image boxImage;
 
     [SerializeField]
-    private GridLayoutGroup choiseHolder;
+    private VerticalLayoutGroup choiseHolder;
 
     [SerializeField]
     private Button choiseBasePrefab;
 
+    public GameObject menu;
+    private bool _IsStart=false;
 
     void Start()
     {
-        LoadStory();
+        menu.SetActive(true);
 
+        LoadStory();
+       
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (!_IsStart)
+        {
+            return;
+        }
+
+            if (Input.GetKeyDown(KeyCode.Space))
         {
             DisplayNextLine();
         }
@@ -52,6 +61,8 @@ public class ScriptReader : MonoBehaviour
         _StoryScript.BindExternalFunction("BG", (string charName) => ChracterBG(charName));
 
         _StoryScript.BindExternalFunction("Box", (string charName) => ChracterBox(charName));
+
+        _StoryScript.BindExternalFunction("FontStyle", (string charName) => DialogFont(charName));
 
     }
     public void DisplayNextLine()
@@ -76,18 +87,21 @@ public class ScriptReader : MonoBehaviour
 
     private void DisplayChoices()
     {
-        if (choiseHolder.GetComponentsInChildren<Button>().Length > 0) return;
-        for (int i = 0; i < _StoryScript.currentChoices.Count; i++)
+        if (choiseHolder.GetComponentsInChildren<Button>().Length > 0)
         {
-            var choise = _StoryScript.currentChoices[i];
-            var button = CreateChoiseButton(choise.text);
+            for (int i = 0; i < _StoryScript.currentChoices.Count; i++)
+            {
+                var choise = _StoryScript.currentChoices[i];
+                var Button = CreateChoiseButton(choise.text);
+            }
         }
+            
     }
 
     Button CreateChoiseButton(String text)
     {
         var choiceButton = Instantiate(choiseBasePrefab);
-        choiceButton.transform.SetParent(choiceButton.transform, false);
+        choiceButton.transform.SetParent(choiseHolder.transform, false);
         var buttonText = choiceButton.GetComponentInChildren<Text>();
         buttonText.text = text;
 
@@ -100,9 +114,18 @@ public class ScriptReader : MonoBehaviour
         nameTag.text = SpeakerName;
 
     }
-
+    
     public void ChracterIcon(string name)
     {
+        if (name == "null")
+        {
+            characterIcon.enabled = false;
+        }
+        else
+        {
+            characterIcon.enabled = true;
+        }
+        
         var charIcon = Resources.Load<Sprite>("CharactersIcons/"+name);
         characterIcon.sprite = charIcon;
        
@@ -121,6 +144,27 @@ public class ScriptReader : MonoBehaviour
 
     }
 
+    public void DialogFont(string name)
+    {
+        switch (name)
+        {
+            case "italic":
+                dialogueBox.fontStyle = FontStyles.Italic;
+                break;
 
+            case "normal":
+                dialogueBox.fontStyle = FontStyles.Normal;
+                break;
+        }
+        var backgroundSprite = Resources.Load<Sprite>("Fondos/fondo-" + name);
+        backgroundImage.sprite = backgroundSprite;
+
+    }
+    public void StartGame()
+    {
+        menu.SetActive(false);
+        _IsStart = true;
+        DisplayNextLine();
+    }
 
 }
